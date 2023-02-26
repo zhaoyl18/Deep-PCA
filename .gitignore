@@ -2,7 +2,7 @@
 __pycache__
 cifar2png.egg-info/
 dist/
-# *.png
+*.png
 .vscode
 data.cifar10/
 component analysis.py
