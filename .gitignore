@@ -1,0 +1,7 @@
+*.pyc
+__pycache__
+cifar2png.egg-info/
+dist/
+*.png
+.vscode
+data.cifar2png
