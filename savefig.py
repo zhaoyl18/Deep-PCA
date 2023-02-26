@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+from torchvision import utils, datasets, transforms
 
 matplotlib.rcParams["figure.dpi"] = 1200
 
@@ -36,4 +37,5 @@ def unpickle(file):
 	return dict
 
 if __name__ == '__main__':
-	 save_the_image()
+	dataset = datasets.CIFAR10('./data.cifar10', train=True, download=True)
+	save_the_image()

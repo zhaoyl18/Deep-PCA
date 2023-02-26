@@ -5,8 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import utils, datasets, transforms
 import matplotlib.pyplot as plt
-from numpy.linalg import inv
-import sys
 
 
 def main(args):
@@ -17,55 +15,97 @@ def main(args):
 						   transforms.ToTensor(),
 						   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 					   ])),
-		batch_size=10, shuffle=False, num_workers=1, **kwargs)
+		batch_size=1, shuffle=False, **kwargs)
 
 	dataiter = iter(train_loader)
-	data, lbls = dataiter.next()
+	data, lbls = next(dataiter)
 	
 	target = F.one_hot(lbls, 10)
 
 	# data: shape [batch, 3, H, W] where 3 means RGB channels, batch=10, H=W=32
-	# target: shape [batch, 10] where 10 means 10 classes, batch=10
-	view_image(utils.make_grid(data[0]))
 
-	LSE(data) # TODO: get whatever information needed by putting them as output in CPCA function
+	# view_image(data[0]) # visualize the first image in the batch (optional)
+
+	raw_img = torch.from_numpy(data.numpy()) # save a copy of raw image shape
+	compressed_img = torch.nn.functional.interpolate(data, scale_factor=0.5, mode='bilinear')
+	X_data = torch.nn.functional.interpolate(compressed_img, scale_factor=2, mode='nearest')	
+	
+	if args.model == 'LSE':
+		LSE((X_data, raw_img))
+	elif args.model == 'CONV':
+		naive_conv(tuple(X_data, raw_img))
 
 
 def LSE(inputs):
-	stem = STEM(inputs, kernel=3)
-	targets = torch.repeat_interleave(targets, inputs.shape[-1]*inputs.shape[-2], dim=0).float()
-	rm = torch.matmul(torch.inverse(torch.matmul(stem.t(), stem)+1e-3*torch.eye(stem.shape[-1])), torch.matmul(torch.matmul(stem.t(), targets), torch.matmul(targets.t(), stem)))
-	components, _ = torch.eig(rm)
-	pass
+	X_data, raw_image = inputs
+	B, C, H, W = X_data.shape
+	stem = STEM(X_data, kernel=3) # [batchxHxW, 3xkernelxkernel]
+	targets = raw_image.permute(0,2,3,1).reshape(B*H*W, C).float() # [batch, 3, H, W] -> [batchxHxW, 3]
+	kernel_weights = torch.matmul(torch.inverse(torch.matmul(stem.t(), stem)+1e-3*torch.eye(stem.shape[-1])),
+			        torch.matmul(stem.t(), targets))
+	conved = torch.matmul(stem, kernel_weights).reshape(B, H, W, C).permute(0,3,1,2)
+	view_image(conved[0])
+	# kernel_weights = kernel_weights.reshape(3, 3, 3, 3) # (in_channels, kernel_size, kernel_size, out_channels,)
+	# kernel_weights = kernel_weights.permute(0, 3, 1, 2) # (in_channels, out_channels, kernel_size, kernel_size)
+	return kernel_weights
 
-# def CPCA(inputs):
-# 	stem = STEM(inputs, kernel=3)
-# 	PCA_output = PCA_eig(stem, k=1) # k is number of components
-# 	components = PCA_output['components']
-# 	pass
+def naive_conv(inputs): # not completed yet..
+	model = torch.nn.Sequential(
+            torch.nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=0),
+            torch.nn.Dropout(p=0.5))
+	learning_rate = 0.001
+	criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+	optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+
+	print('Training the kernel ...')
+	train_cost = []
+
+	training_epochs = 15
+
+	for epoch in range(training_epochs):
+		avg_cost = 0
+		X_data, raw_image = inputs    # image is already size of (28x28), no reshape
+
+		optimizer.zero_grad() # <= initialization of the gradients
+		
+		# forward propagation
+		out = model(X_data)
+		output = out.view(out.size(0), -1)
+		cost = criterion(output, raw_image) # <= compute the loss function
+		
+		# Backward propagation
+		cost.backward() # <= compute the gradient of the loss/cost function     
+		optimizer.step() # <= Update the gradients
+		
+		train_cost.append(cost.item())
+
+		print("[Epoch: {:>4}], cost = {:>.9}".format(epoch + 1, cost.item()))
 
 
-# def PCA_eig(X, k=1, center=True, scale=False):
-#     n,p = X.size()
-#     ones = torch.ones(n).view([n,1])
-#     h = ((1/n) * torch.mm(ones, ones.t())) if center else torch.zeros(n*n).view([n,n])
-#     H = torch.eye(n) - h
-#     X_center =  torch.mm(H.double(), X.double())
-#     covariance = 1/(n-1) * torch.mm(X_center.t(), X_center).view(p,p)
-#     scaling =  torch.sqrt(1/torch.diag(covariance)).double() if scale else torch.ones(p).double()
-#     scaled_covariance = torch.mm(torch.diag(scaling).view(p,p), covariance)
-#     eigenvalues, eigenvectors = torch.eig(scaled_covariance, True)
-#     components = (eigenvectors[:, :k]).t()
-#     explained_variance = eigenvalues[:k, 0]
-#     return { 'X':X, 'k':k, 'components':components, 'explained_variance':explained_variance }
+		print('Learning Finished!')
 
+	# Test model and check accuracy
+	model.eval()    # set the model to evaluation mode (dropout=False)
 
-# def CRCA(inputs, targets):
-# 	stem = STEM(inputs, kernel=3)
-# 	targets = torch.repeat_interleave(targets, inputs.shape[-1]*inputs.shape[-2], dim=0).float()
-# 	rm = torch.matmul(torch.inverse(torch.matmul(stem.t(), stem)+1e-3*torch.eye(stem.shape[-1])), torch.matmul(torch.matmul(stem.t(), targets), torch.matmul(targets.t(), stem)))
-# 	components, _ = torch.eig(rm)
-# 	pass
+	X_data, raw_image = inputs
+
+	prediction = model(X_data)
+	view_image(prediction[0]) # visualize the first image in the batch (optional)
+
+	# print('\nAccuracy: {:2.2f} %'.format(accuracy*100))
+
+# class compression(torch.nn.Module):
+
+#     def __init__(self):
+#         super(compression, self).__init__()
+#         self.conv = torch.nn.Sequential(
+#             torch.nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=0),
+#             torch.nn.Dropout(p=0.5))
+
+#     def forward(self, x):
+#         out = self.conv(x)
+#         out = out.view(out.size(0), -1)   # Flatten them for FC
+#         return out
 
 
 # TODO: write your STEM function
@@ -73,9 +113,17 @@ def STEM(inputs, kernel=3):
 	'''
 	hint: stem should have shape [batchxHxW, 3xkernelxkernel] where batch=10, H=W=32, kernel=3
 	'''
-	pass
+	B, C, H, W = inputs.shape
+	X_pad = torch.nn.functional.pad(inputs, (1, 1, 1, 1), mode='constant', value=0) # padding it to be [B, C, (H+2), [W+2]]
+	outputs = torch.zeros((B*H*W, C*kernel*kernel))
+	for b in range(B):
+		for i in range(H):
+			for j in range(W):
+				outputs[b*H*W + i*W + j] = X_pad[b, :, i:i+kernel, j:j+kernel].reshape(-1)
+	return outputs
 
-def view_image(image):
+def view_image(tensor):
+	image = utils.make_grid(tensor)
 	img = image / 2 + 0.5   # unnormalize
 	npimg = img.numpy()   # convert from tensor
 	plt.imshow(np.transpose(npimg, (1, 2, 0))) 
@@ -84,7 +132,7 @@ def view_image(image):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="PyTorch Training")
-	parser.add_argument('--model', type=str, default='LSE', help='choose between LSE, PCA and RCA')
+	parser.add_argument('--model', type=str, default='LSE', help='choose between LSE and CONV')
 	args = parser.parse_args()
 	main(args)
 
