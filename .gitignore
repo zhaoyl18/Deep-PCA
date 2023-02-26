@@ -4,4 +4,5 @@ cifar2png.egg-info/
 dist/
 *.png
 .vscode
-data.cifar2png
+data.cifar10/
+component analysis.py
