@@ -51,48 +51,48 @@ def LSE(inputs):
 	# kernel_weights = kernel_weights.permute(0, 3, 1, 2) # (in_channels, out_channels, kernel_size, kernel_size)
 	return kernel_weights
 
-def naive_conv(inputs): # not completed yet..
-	model = torch.nn.Sequential(
-            torch.nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=0),
-            torch.nn.Dropout(p=0.5))
-	learning_rate = 0.001
-	criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
-	optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+# def naive_conv(inputs): # not completed yet..
+# 	model = torch.nn.Sequential(
+#             torch.nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=0),
+#             torch.nn.Dropout(p=0.5))
+# 	learning_rate = 0.001
+# 	criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+# 	optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
-	print('Training the kernel ...')
-	train_cost = []
+# 	print('Training the kernel ...')
+# 	train_cost = []
 
-	training_epochs = 15
+# 	training_epochs = 15
 
-	for epoch in range(training_epochs):
-		avg_cost = 0
-		X_data, raw_image = inputs    # image is already size of (28x28), no reshape
+# 	for epoch in range(training_epochs):
+# 		avg_cost = 0
+# 		X_data, raw_image = inputs    # image is already size of (28x28), no reshape
 
-		optimizer.zero_grad() # <= initialization of the gradients
+# 		optimizer.zero_grad() # <= initialization of the gradients
 		
-		# forward propagation
-		out = model(X_data)
-		output = out.view(out.size(0), -1)
-		cost = criterion(output, raw_image) # <= compute the loss function
+# 		# forward propagation
+# 		out = model(X_data)
+# 		output = out.view(out.size(0), -1)
+# 		cost = criterion(output, raw_image) # <= compute the loss function
 		
-		# Backward propagation
-		cost.backward() # <= compute the gradient of the loss/cost function     
-		optimizer.step() # <= Update the gradients
+# 		# Backward propagation
+# 		cost.backward() # <= compute the gradient of the loss/cost function     
+# 		optimizer.step() # <= Update the gradients
 		
-		train_cost.append(cost.item())
+# 		train_cost.append(cost.item())
 
-		print("[Epoch: {:>4}], cost = {:>.9}".format(epoch + 1, cost.item()))
+# 		print("[Epoch: {:>4}], cost = {:>.9}".format(epoch + 1, cost.item()))
 
 
-		print('Learning Finished!')
+# 		print('Learning Finished!')
 
-	# Test model and check accuracy
-	model.eval()    # set the model to evaluation mode (dropout=False)
+# 	# Test model and check accuracy
+# 	model.eval()    # set the model to evaluation mode (dropout=False)
 
-	X_data, raw_image = inputs
+# 	X_data, raw_image = inputs
 
-	prediction = model(X_data)
-	view_image(prediction[0]) # visualize the first image in the batch (optional)
+# 	prediction = model(X_data)
+# 	view_image(prediction[0]) # visualize the first image in the batch (optional)
 
 def STEM(inputs, kernel=3):
 	'''
