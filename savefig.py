@@ -7,9 +7,9 @@ matplotlib.rcParams["figure.dpi"] = 1200
 
 
 def save_the_image():
-	meta_file = r'D:\Datum\ECE571 Deep Learning Networks\Deep-LSE\data.cifar10\cifar-10-batches-py\batches.meta'
+	meta_file = r'D:\Datum\ECE571 Deep Learning Networks\Deep-PCA\data.cifar10\cifar-10-batches-py\batches.meta'
 	meta_data = unpickle(meta_file)
-	file = r'D:\Datum\ECE571 Deep Learning Networks\Deep-LSE\data.cifar10\cifar-10-batches-py\data_batch_1'
+	file = r'D:\Datum\ECE571 Deep Learning Networks\Deep-PCA\data.cifar10\cifar-10-batches-py\data_batch_1'
 	data_batch_1 = unpickle(file)
 	# label names
 	label_name = meta_data['label_names']
