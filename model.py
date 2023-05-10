@@ -45,9 +45,9 @@ def DPCA_eig(Y, X, m): #here we minimize $\| Y - F U X \|^2$
     return { 'X':X, 'k':m, 'components':U, 'explained_variance':explained_variance,
             'W': W}
 
-def CRCA(data, targets, num_components):
+def CRCA(data, targets, num_components, channel=3):
     m = num_components
-    stem = STEM(data, kernel=3)
+    stem = STEM(data, channel=channel)
     targets = torch.repeat_interleave(targets, data.shape[-1]*data.shape[-2], dim=0).float()
     rm = torch.mm(torch.inverse(torch.mm(stem.t(), stem)+1e-3*torch.eye(stem.shape[-1])),
                 torch.mm(torch.mm(stem.t(), targets), torch.mm(targets.t(), stem)))
@@ -60,18 +60,19 @@ def CRCA(data, targets, num_components):
     W = torch.mm(F,U)
     return stem, W
 
-def CPCA(data, targets, num_components):
-    stem = STEM(data, kernel=3)  #(BHW,27)
+def CPCA(data, targets, num_components, channel=3):
+    stem = STEM(data, channel=channel)  #(BHW,27)
     PCA_output = DPCA_eig(targets, stem.t(), m=num_components) # m is number of components
     # components = PCA_output['components']
     weights = PCA_output['W']
     return stem, weights
 
 
-def STEM(inputs, kernel=3):
+def STEM(inputs, channel=3):
     '''
     return: stem features with shape [batchxHxW, 3xkernelxkernel] where batch=10, H=W=32, kernel=3
     '''
+    kernel = 3
     B, C, H, W = inputs.shape
     X = []
     inputs_with_padding = torch.cat((inputs,torch.zeros((B,C,H,kernel))),-1)
@@ -82,7 +83,7 @@ def STEM(inputs, kernel=3):
             row.append(inputs_with_padding[:,:,i:i+kernel,j:j+kernel])
         X.append(row)
     X = torch.stack([torch.stack(x,2) for x in X],2).permute(0,2,3,1,4,5)
-    return X.reshape(-1,3*kernel*kernel)
+    return X.reshape(-1,channel*kernel*kernel)
 
 
 # TODO: write your own function to extract the leading component, with shape:  [3xkernelxkernel, 1]

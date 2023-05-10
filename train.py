@@ -9,15 +9,100 @@ import scipy
 from numpy.linalg import inv
 import sys
 import matplotlib.pyplot as plt
+import os
+import cv2
+import shutil
+import random
 
 from DPCA import run_single_img, run_cifar, run_faces
+
+class Eigenfaces(object):                                                       # *** COMMENTS ***
+    faces_count = 40
+
+    faces_dir = '.'                                                             # directory path to the AT&T faces
+
+    train_faces_count = 6                                                       # number of faces used for training
+    test_faces_count = 4                                                        # number of faces used for testing
+
+    l = train_faces_count * faces_count                                         # training images count
+    m = 92                                                                      # number of columns of the image
+    n = 112                                                                     # number of rows of the image
+    mn = m * n                                                                  # length of the column vector
+
+    """
+    Initializing the Eigenfaces model.
+    """
+    def __init__(self, _faces_dir = '.'):
+        print('> Initializing started')
+
+        self.faces_dir = _faces_dir
+        self.energy = 0.85
+        self.training_ids = []                                                  # train image id's for every at&t face
+
+        L = np.empty(shape=(self.mn, self.l), dtype='float64')                  # each row of L represents one train image
+
+        cur_img = 0
+        for face_id in range(1, self.faces_count + 1):
+
+            training_ids = random.sample(range(1, 11), self.train_faces_count)  # the id's of the 6 random training images
+            self.training_ids.append(training_ids)                              # remembering the training id's for later
+
+            for training_id in training_ids:
+                path_to_img = os.path.join(self.faces_dir,
+                        's' + str(face_id), str(training_id) + '.pgm')          # relative path
+                #print '> reading file: ' + path_to_img
+
+                img = cv2.imread(path_to_img, 0)                                # read a grayscale image
+                img_col = np.array(img, dtype='float64').flatten()              # flatten the 2d image into 1d
+
+                L[:, cur_img] = img_col[:]                                      # set the cur_img-th column to the current training image
+                cur_img += 1
+
+        self.mean_img_col = np.sum(L, axis=1) / self.l                          # get the mean of all images / over the rows of L
+
+        for j in range(0, self.l):                                             # subtract from all training images
+            L[:, j] -= self.mean_img_col[:]
+
+        C = np.matrix(L.transpose()) * np.matrix(L)                             # instead of computing the covariance matrix as
+        C /= self.l                                                             # L*L^T, we set C = L^T*L, and end up with way
+                                                                                # smaller and computentionally inexpensive one
+                                                                                # we also need to divide by the number of training
+                                                                                # images
+
+
+        self.evalues, self.evectors = np.linalg.eig(C)                          # eigenvectors/values of the covariance matrix
+        sort_indices = self.evalues.argsort()[::-1]                             # getting their correct order - decreasing
+        self.evalues = self.evalues[sort_indices]                               # puttin the evalues in that order
+        self.evectors = self.evectors[:,sort_indices]                             # same for the evectors
+
+        evalues_sum = sum(self.evalues[:])                                      # include only the first k evectors/values so
+        evalues_count = 0                                                       # that they include approx. 85% of the energy
+        evalues_energy = 0.0
+        for evalue in self.evalues:
+            evalues_count += 1
+            evalues_energy += evalue / evalues_sum
+
+            if evalues_energy >= self.energy:
+                break
+
+        self.evalues = self.evalues[0:evalues_count]                            # reduce the number of eigenvectors/values to consider
+        self.evectors = self.evectors[:,0:evalues_count]
+
+        #self.evectors = self.evectors.transpose()                                # change eigenvectors from rows to columns (Should not transpose) 
+        self.evectors = L * self.evectors                                       # left multiply to get the correct evectors
+        norms = np.linalg.norm(self.evectors, axis=0)                           # find the norm of each eigenvector
+        self.evectors = self.evectors / norms                                   # normalize all eigenvectors
+
+        self.W = self.evectors.transpose() * L                                  # computing the weights
+
+        print('> Initializing ended')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch Training")
     parser.add_argument('--model', type=str, default='PCA', help='choose between PCA and RCA')
     parser.add_argument('--num_components', type=int, default=2, help='choose between 1,2,3')
-    parser.add_argument('--dataset', type=str, default='single_img', help='choose between single_img, cifar and faces')
+    parser.add_argument('--dataset', type=str, default='faces', help='choose between single_img, cifar and faces')
     args = parser.parse_args()
 
     if args.dataset == 'cifar':
@@ -25,4 +110,4 @@ if __name__ == "__main__":
     elif args.dataset == 'single_img':
         run_single_img(args)
     elif args.dataset == 'faces':
-        run_faces(args)
+        faces = Eigenfaces('./datasets/att_faces', args.num_components)

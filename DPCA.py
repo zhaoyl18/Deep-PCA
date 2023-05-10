@@ -70,9 +70,26 @@ def run_single_img(args):
     view_image(img_data[0])  # plot original images
     view_image(torch.clamp(featuremaps[0].permute(2, 0, 1), min=-1.0, max=1.0)) # visualize the first image in the batch (optional)
 
-def run_faces(args):
-    pass
+def run_faces(img):
+    # load babyface image
+    # img = Image.open('results/baby_mini_d3_gaussian.jpg')
+    # img_data = torch.from_numpy(np.asarray(img).astype(np.float32))
+    img_data = torch.from_numpy(img.astype(np.float32)).unsqueeze(0)
+    img_data = img_data.unsqueeze(0)/255  #shape [batch, C, H, W]
+    img_data = img_data*2 - 1 # normalize to [-1, 1]
 
+    B, C, H, W = img_data.shape # data: shape [batch, 3, H, W] where 3 means RGB channels, batch=10, H=W=32
+
+    compressed_img = torch.nn.functional.interpolate(img_data, scale_factor=0.5, mode='bilinear')
+    X_data = torch.nn.functional.interpolate(compressed_img, scale_factor=2, mode='nearest')
+
+    targets = img_data.permute(0,2,3,1).reshape(-1, C).float().t() # (1, 112*92)
+    stem, weights = CPCA(X_data, targets, 1, channel=1) #(112*92,9), (1,9)
+    featuremaps = torch.matmul(weights, stem.t()).reshape(B, H, W)
+
+    restored_img = torch.clamp(featuremaps[0].squeeze(0), min=-1.0, max=1.0)
+    restored_img = restored_img / 2 + 0.5
+    return restored_img.cpu().data.numpy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch Training")
@@ -81,6 +98,5 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default='cifar', help='choose between single_img, cifar and faces')
     args = parser.parse_args()
     # run_cifar(args)
-    run_single_img(args)
 
 
