@@ -97,6 +97,6 @@ if __name__ == "__main__":
     parser.add_argument('--num_components', type=int, default=2, help='choose between 1,2,3')
     parser.add_argument('--dataset', type=str, default='cifar', help='choose between single_img, cifar and faces')
     args = parser.parse_args()
-    # run_cifar(args)
+    run_cifar(args)
 
 

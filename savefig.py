@@ -43,15 +43,7 @@ def unpickle(file):
 	return dict
 
 def restore_faces():													# *** COMMENTS ***
-	faces_count = 40                                                          # directory path to the AT&T faces
-	train_faces_count = 6                                                       # number of faces used for training
-	test_faces_count = 4                                                        # number of faces used for testing
-
-	l = train_faces_count * faces_count                                         # training images count
-	m = 92                                                                      # number of columns of the image
-	n = 112                                                                     # number of rows of the image
-	mn = m * n                                                                  # length of the column vector
-
+	faces_count = 40                                                          # directory path to the AT&T faces                                                      # number of faces used for training
 	print('> Initializing started')
 
 	faces_dir = './datasets/att_faces'
@@ -79,14 +71,7 @@ def restore_faces():													# *** COMMENTS ***
 			cv2.imwrite(path_to_restored, img_restore)
 
 def compress_faces():													# *** COMMENTS ***
-	faces_count = 40                                                          # directory path to the AT&T faces
-	train_faces_count = 6                                                       # number of faces used for training
-	test_faces_count = 4                                                        # number of faces used for testing
-
-	l = train_faces_count * faces_count                                         # training images count
-	m = 92                                                                      # number of columns of the image
-	n = 112                                                                     # number of rows of the image
-	mn = m * n                                                                  # length of the column vector
+	faces_count = 40                                                          # directory path to the AT&T faces                                                                 # length of the column vector
 
 	print('> Initializing started')
 

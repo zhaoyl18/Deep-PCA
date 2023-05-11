@@ -14,15 +14,16 @@ import cv2
 import shutil
 import random
 
-from DPCA import run_single_img, run_cifar, run_faces
+from DPCA import run_single_img, run_cifar, run_faces, CPCA
+from model import DPCA_eig, STEM
 
 class Eigenfaces(object):                                                       # *** COMMENTS ***
     faces_count = 40
 
     faces_dir = '.'                                                             # directory path to the AT&T faces
 
-    train_faces_count = 8                                                       # number of faces used for training
-    test_faces_count = 2                                                       # number of faces used for testing
+    train_faces_count = 6                                                       # number of faces used for training
+    test_faces_count = 4                                                       # number of faces used for testing
 
     l = train_faces_count * faces_count                                         # training images count
     m = 92                                                                      # number of columns of the image
@@ -67,13 +68,27 @@ class Eigenfaces(object):                                                       
         C /= self.l                                                             # L*L^T, we set C = L^T*L, and end up with way
                                                                                 # smaller and computentionally inexpensive one
                                                                                 # we also need to divide by the number of training
-                                                                                # images
-
-
-        self.evalues, self.evectors = np.linalg.eig(C)                          # eigenvectors/values of the covariance matrix
-        sort_indices = self.evalues.argsort()[::-1]                             # getting their correct order - decreasing
-        self.evalues = self.evalues[sort_indices]                               # puttin the evalues in that order
-        self.evectors = self.evectors[:,sort_indices]                             # same for the evectors
+        # data = torch.from_numpy(np.matrix(L.transpose())).reshape(self.l, 92, 112).unsqueeze(1)   #[320, 1, 92, 112]
+        # stem = STEM(data, channel=1)  #[3297280, 9]
+        # X = stem.reshape(self.l, 92*112, 9).reshape(self.l,-1).t()  #[HW9, 320]
+        # Y = torch.from_numpy(np.matrix(L))                                 #[HW, 320]
+        
+        # XYt = torch.mm(X, Y.t())
+        # # RM = torch.mm(torch.inverse(torch.mm(X, X.t())+1e-3*torch.eye(X.shape[0])),
+        # #                 torch.mm(XYt, XYt.t()))
+        # RM_ = torch.mm(X.t(),torch.inverse(torch.mm(X, X.t())+1e-3*torch.eye(X.shape[0])),
+        #                 torch.mm(XYt, Y))
+        # eigenvalues, eigenvectors = torch.linalg.eig(RM_)
+        
+        # values, indices = torch.sort(eigenvalues.real, descending=True)
+        
+        # m=50
+        # U = (eigenvectors[:, indices[:m]]).t().real  #(m,HW9)
+        
+        values, eigenvectors = np.linalg.eig(C)                          # eigenvectors/values of the covariance matrix
+        indices = values.argsort()[::-1]                             # getting their correct order - decreasing
+        self.evalues = values[indices]                               # puttin the evalues in that order
+        self.evectors = eigenvectors[:,indices]                             # same for the evectors
 
         evalues_sum = sum(self.evalues[:])                                      # include only the first k evectors/values so
         evalues_count = 0                                                       # that they include approx. 85% of the energy
@@ -88,12 +103,11 @@ class Eigenfaces(object):                                                       
         self.evalues = self.evalues[0:evalues_count]                            # reduce the number of eigenvectors/values to consider
         self.evectors = self.evectors[:,0:evalues_count]
 
-        #self.evectors = self.evectors.transpose()                                # change eigenvectors from rows to columns (Should not transpose) 
-        self.evectors = L * self.evectors                                       # left multiply to get the correct evectors
+        self.evectors = L * self.evectors    #(HW,62)
         norms = np.linalg.norm(self.evectors, axis=0)                           # find the norm of each eigenvector
         self.evectors = self.evectors / norms                                   # normalize all eigenvectors
 
-        self.W = self.evectors.transpose() * L                                  # computing the weights
+        self.W = self.evectors.transpose() * L       #(62,320)
 
         print('> Initializing ended')
     """
@@ -147,7 +161,6 @@ class Eigenfaces(object):                                                       
         f.write('Correct: %.2f\n' % (self.accuracy))
         f.close()                                                               # closing the file
 
-
 if __name__ == "__main__":
     random.seed(0)
     parser = argparse.ArgumentParser(description="PyTorch Training")
@@ -161,7 +174,10 @@ if __name__ == "__main__":
     elif args.dataset == 'single_img':
         run_single_img(args)
     elif args.dataset == 'faces':
-        faces = Eigenfaces('./datasets/att_faces')
-        if not os.path.exists('results'):                                           # create a folder where to store the results
-            os.makedirs('results')
+        # aaa = Eigenfaces('./datasets/att_faces_restore')
+        # if not os.path.exists('results'):                                           # create a folder where to store the results
+        #     os.makedirs('results')
+        # aaa.evaluate()
+        
+        faces = Eigenfaces('./datasets/att_faces_restore')
         faces.evaluate()
