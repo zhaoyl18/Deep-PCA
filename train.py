@@ -21,8 +21,8 @@ class Eigenfaces(object):                                                       
 
     faces_dir = '.'                                                             # directory path to the AT&T faces
 
-    train_faces_count = 6                                                       # number of faces used for training
-    test_faces_count = 4                                                        # number of faces used for testing
+    train_faces_count = 8                                                       # number of faces used for training
+    test_faces_count = 2                                                       # number of faces used for testing
 
     l = train_faces_count * faces_count                                         # training images count
     m = 92                                                                      # number of columns of the image
@@ -96,9 +96,60 @@ class Eigenfaces(object):                                                       
         self.W = self.evectors.transpose() * L                                  # computing the weights
 
         print('> Initializing ended')
+    """
+    Classify an image to one of the eigenfaces.
+    """
+    def classify(self, path_to_img):
+        img = cv2.imread(path_to_img, 0)                                        # read as a grayscale image
+        img_col = np.array(img, dtype='float64').flatten()                      # flatten the image
+        img_col -= self.mean_img_col                                            # subract the mean column
+        img_col = np.reshape(img_col, (self.mn, 1))                             # from row vector to col vector
+
+        S = self.evectors.transpose() * img_col                                 # projecting the normalized probe onto the
+                                                                                # Eigenspace, to find out the weights
+
+        diff = self.W - S                                                       # finding the min ||W_j - S||
+        norms = np.linalg.norm(diff, axis=0)
+
+        closest_face_id = np.argmin(norms)                                      # the id [0..240) of the minerror face to the sample
+        return int(closest_face_id / self.train_faces_count) + 1                   # return the faceid (1..40)
+
+    """
+    Evaluate the model using the 4 test faces left
+    from every different face in the AT&T set.
+    """
+    def evaluate(self):
+        print('> Evaluating AT&T faces started')
+        results_file = os.path.join('results', 'att_restore_results.txt')               # filename for writing the evaluating results in
+        f = open(results_file, 'w')                                             # the actual file
+
+        test_count = self.test_faces_count * self.faces_count                   # number of all AT&T test images/faces
+        test_correct = 0
+        for face_id in range(1, self.faces_count + 1):
+            for test_id in range(1, 11):
+                if (test_id in self.training_ids[face_id-1]) == False:          # we skip the image if it is part of the training set
+                    path_to_img = os.path.join(self.faces_dir,
+                            's' + str(face_id), str(test_id) + '.pgm')          # relative path
+
+                    result_id = self.classify(path_to_img)
+                    result = (result_id == face_id)
+
+                    if result == True:
+                        test_correct += 1
+                        f.write('image: %s\nresult: correct\n\n' % path_to_img)
+                    else:
+                        f.write('image: %s\nresult: wrong, got %2d\n\n' %
+                                (path_to_img, result_id))
+
+        print('> Evaluating AT&T faces ended')
+        self.accuracy = float(100. * test_correct / test_count)
+        print('Correct: ' + str(self.accuracy) + '%')
+        f.write('Correct: %.2f\n' % (self.accuracy))
+        f.close()                                                               # closing the file
 
 
 if __name__ == "__main__":
+    random.seed(0)
     parser = argparse.ArgumentParser(description="PyTorch Training")
     parser.add_argument('--model', type=str, default='PCA', help='choose between PCA and RCA')
     parser.add_argument('--num_components', type=int, default=2, help='choose between 1,2,3')
@@ -110,4 +161,7 @@ if __name__ == "__main__":
     elif args.dataset == 'single_img':
         run_single_img(args)
     elif args.dataset == 'faces':
-        faces = Eigenfaces('./datasets/att_faces', args.num_components)
+        faces = Eigenfaces('./datasets/att_faces')
+        if not os.path.exists('results'):                                           # create a folder where to store the results
+            os.makedirs('results')
+        faces.evaluate()
