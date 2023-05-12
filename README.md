@@ -17,7 +17,9 @@ To save storage, we also apply Deep PCA to each image and test the performance o
 
 ## Datasets
 
-The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [3] contain ten different images of each of 40 distinct subjects. The images were taken at different times, varying the lighting, facial expressions (open / closed eyes, smiling / not smiling) and facial details (glasses / no glasses). All the images were taken against a dark homogeneous background with the subjects in an upright, frontal position (with tolerance for some side movement)
+The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [3] contain ten different images of each of 40 distinct subjects.
+
+The images were taken at different times, varying the lighting, facial expressions (open / closed eyes, smiling / not smiling) and facial details (glasses / no glasses). All the images were taken against a dark homogeneous background with the subjects in an upright, frontal position (with tolerance for some side movement)
 
 ## Pre-processing
 
@@ -62,7 +64,11 @@ The eigenfaces is one of the most popular approaches to represent an image, with
 ## Reference
 
 [1] Turk, Matthew A., and Alex P. Pentland. "Face recognition using eigenfaces." Computer Vision and Pattern Recognition, 1991. Proceedings CVPR'91., IEEE Computer Society Conference on. IEEE, 1991.
+
 [2] Turk, Matthew, and Alex Pentland. "Eigenfaces for recognition." Journal of cognitive neuroscience 3.1 (1991): 71-86.
+
 [3] Belhumeur, Peter N., Joao Pedo Hespanha, and David J. Kriegman. "Eigenfaces vs. fisherfaces: Recognition using class specific linear projection." IEEE Transactions on pattern analysis and machine intelligence 19.7 (1997): 711-720.
+
 [4] <http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html>
+
 [5] <https://github.com/zwChan/Face-recognition-using-eigenfaces>
