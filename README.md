@@ -23,23 +23,21 @@ The images were taken at different times, varying the lighting, facial expressio
 
 ## Pre-processing
 
-1. For every image, we compress 2x directly. Then we save an up-sampling version to dataset/att_faces_compress
-Surly directly reducing image by 4 times would lead to a lot of information lost. However, we save a weight based on Deep pca hoping it could recover super resolution. Namely, we minimize $\|Y - FU X\|_F^2$ where $U$ is a combinations of eigenfectors. Finally the weight used to recover image is $W = FU$.
+1. For every image, we compress 2x directly. Then we save an up-sampling version to dataset/att_faces_compress folder.
+Surely directly reducing image by 4 times would lead to a lot of information lost. However, we save a weight based on Deep pca hoping it could recover super resolution. Namely, we minimize $\|Y - FU X\|_F^2$ where $U$ is a combinations of eigenfectors. Finally the weight used to recover image is $W = FU$.
 2. For every compressed image, we apply convolution kernel $W$ and save the restored image to datasets.att_faces_restore
 
 ## Methodology
 
-1. For each of the three datasets. Load images and convert every of them into a Numpy matrix xi;
+1. For each of the three datasets. Load images and convert every of them into a matrix.
 
-2. Compute the mean face.
+2. Compute the mean face by averaging over all images.
 
-3. Compute the normalized images:
+3. Compute the normalized images by subtracting mean face.
 
-4. Compute the Covariance Matrix S, which is different from the covariance matrix, in order to avoid huge matrix for eigen decomposition problem.
+4. Compute the Covariance Matrix S, which is different from the covariance matrix, in order to avoid huge matrix for doing eigen decomposition.
 
-5. Compute the Covariance Matrix S, which is different from the covariance matrix, in order to avoid huge matrix for eigen decomposition problem.
-
-6. Compute the eigenvalue and eigenvector. Then we have completed the initialization process of eigenfaces.
+5. Compute the eigenvalue and eigenvector. Then we have completed the initialization process of eigenfaces.
 
 ## Recognition
 
