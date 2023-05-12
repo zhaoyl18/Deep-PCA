@@ -17,14 +17,14 @@ To save storage, we also apply Deep PCA to each image and test the performance o
 
 ## Datasets
 
-The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [4] contains ten different images of each of 40 distinct subjects.
+The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [3] contains ten different images of each of 40 distinct subjects.
 
 The images were taken at different times, varying the lighting, facial expressions (open / closed eyes, smiling / not smiling) and facial details (glasses / no glasses). All the images were taken against a dark homogeneous background with the subjects in an upright, frontal position (with tolerance for some side movement)
 
 ## Pre-processing
 
-1. For every image, we compress 2x directly. Then we save an up-sampling version to dataset/att_faces_compress folder.
-Surely directly reducing image by 4 times would lead to a lot of information lost. However, we save a weight based on Deep pca hoping it could recover super resolution. Namely, we minimize $\|Y - FU X\|_F^2$ where $U$ is a combinations of eigenfectors. Finally the weight used to recover image is $W = FU$.
+1. For every image, we compress 2x directly. Then we save an up-sampling version to *dataset/att_faces_compress* folder.
+Surely directly reducing image by 4 times would lead to a lot of information lost. However, we save a weight based on Deep pca hoping it could recover super resolution. Namely, we minimize $||Y - FU X||_F^2$ where $U$ is a combinations of eigenfectors. Finally the weight used to recover image is $W = FU$.
 2. For every compressed image, we apply convolution kernel $W$ and save the restored image to datasets.att_faces_restore
 
 ## Methodology
@@ -58,12 +58,11 @@ To recognize an unknown face, we used the Knn algorithm to find the close subjec
 ## Discussion
 
 The eigenfaces is one of the most popular approaches to represent an image, with the basic idea that the top k component eigenvectors (eigenfaces) represent as much variance as possible. This criterion need not to be meaningful. It is also susceptible to illumination and background around the face.  
-Fisherfaces [3] is considered to be a better representation than eigenfaces since it is more robust to illumination. But both of them do not contain semantic meanings as human to understand a face image. A possible further study is the deep neural network approach that produce the state of the art performance by now.
+Fisherfaces [2] is considered to be a better representation than eigenfaces since it is more robust to illumination. But both of them do not contain semantic meanings as human to understand a face image. A possible further study is the deep neural network approach that produce the state of the art performance by now.
 
 ## Reference
 
 [1] Turk, Matthew A., and Alex P. Pentland. "Face recognition using eigenfaces." Computer Vision and Pattern Recognition, 1991. Proceedings CVPR'91., IEEE Computer Society Conference on. IEEE, 1991.  
-[2] Turk, Matthew, and Alex Pentland. "Eigenfaces for recognition." Journal of cognitive neuroscience 3.1 (1991): 71-86.  
-[3] Belhumeur, Peter N., Joao Pedo Hespanha, and David J. Kriegman. "Eigenfaces vs. fisherfaces: Recognition using class specific linear projection." IEEE Transactions on pattern analysis and machine intelligence 19.7 (1997): 711-720.  
-[4] <http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html>  
-[5] <https://github.com/zwChan/Face-recognition-using-eigenfaces>
+[2] Belhumeur, Peter N., Joao Pedo Hespanha, and David J. Kriegman. "Eigenfaces vs. fisherfaces: Recognition using class specific linear projection." IEEE Transactions on pattern analysis and machine intelligence 19.7 (1997): 711-720.  
+[3] <http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html>  
+[4] <https://github.com/zwChan/Face-recognition-using-eigenfaces>
