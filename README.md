@@ -17,7 +17,7 @@ To save storage, we also apply Deep PCA to each image and test the performance o
 
 ## Datasets
 
-The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [3] contain ten different images of each of 40 distinct subjects.
+The AT&T "The Database of Faces" (formerly "The ORL Database of Faces") dataset [4] contains ten different images of each of 40 distinct subjects.
 
 The images were taken at different times, varying the lighting, facial expressions (open / closed eyes, smiling / not smiling) and facial details (glasses / no glasses). All the images were taken against a dark homogeneous background with the subjects in an upright, frontal position (with tolerance for some side movement)
 
@@ -57,16 +57,13 @@ To recognize an unknown face, we used the Knn algorithm to find the close subjec
 
 ## Discussion
 
-The eigenfaces is one of the most popular approaches to represent an image, with the basic idea that the top k component eigenvectors (eigenfaces) represent as much variance as possible. This criterion need not to be meaningful. It is also susceptible to illumination and background around the face. Fisherfaces [3] is considered to be a better representation than eigenfaces since it is more robust to illumination. But both of them do not contain semantic meanings as human to understand a face image. A possible further study is the deep neural network approach that produce the state of the art performance by now.
+The eigenfaces is one of the most popular approaches to represent an image, with the basic idea that the top k component eigenvectors (eigenfaces) represent as much variance as possible. This criterion need not to be meaningful. It is also susceptible to illumination and background around the face.  
+Fisherfaces [3] is considered to be a better representation than eigenfaces since it is more robust to illumination. But both of them do not contain semantic meanings as human to understand a face image. A possible further study is the deep neural network approach that produce the state of the art performance by now.
 
 ## Reference
 
-[1] Turk, Matthew A., and Alex P. Pentland. "Face recognition using eigenfaces." Computer Vision and Pattern Recognition, 1991. Proceedings CVPR'91., IEEE Computer Society Conference on. IEEE, 1991.
-
-[2] Turk, Matthew, and Alex Pentland. "Eigenfaces for recognition." Journal of cognitive neuroscience 3.1 (1991): 71-86.
-
-[3] Belhumeur, Peter N., Joao Pedo Hespanha, and David J. Kriegman. "Eigenfaces vs. fisherfaces: Recognition using class specific linear projection." IEEE Transactions on pattern analysis and machine intelligence 19.7 (1997): 711-720.
-
-[4] <http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html>
-
+[1] Turk, Matthew A., and Alex P. Pentland. "Face recognition using eigenfaces." Computer Vision and Pattern Recognition, 1991. Proceedings CVPR'91., IEEE Computer Society Conference on. IEEE, 1991.  
+[2] Turk, Matthew, and Alex Pentland. "Eigenfaces for recognition." Journal of cognitive neuroscience 3.1 (1991): 71-86.  
+[3] Belhumeur, Peter N., Joao Pedo Hespanha, and David J. Kriegman. "Eigenfaces vs. fisherfaces: Recognition using class specific linear projection." IEEE Transactions on pattern analysis and machine intelligence 19.7 (1997): 711-720.  
+[4] <http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html>  
 [5] <https://github.com/zwChan/Face-recognition-using-eigenfaces>
