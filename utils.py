@@ -77,3 +77,24 @@ def show_image_size(image_path):
     # display width and height
     print("The height of the image is: ", height)
     print("The width of the image is: ", width)
+
+def Display_images_as_subplots(original,compressed,restored):
+    plt.rcParams.update({'figure.max_open_warning': 0})
+
+    # display images as subplots
+    original = cv2.imread(original)
+    compressed = cv2.imread(compressed)
+    restored = cv2.imread(restored) # 1 means read as color image
+
+    fig, axs = plt.subplots(1, 3, figsize=(20, 8))
+    axs[0].imshow(cv2.cvtColor(original, cv2.COLOR_BGR2RGB))
+    axs[0].set_title('Original')
+    axs[1].imshow(cv2.cvtColor(compressed, cv2.COLOR_BGR2RGB))
+    axs[1].set_title('Compressed')
+    axs[2].imshow(cv2.cvtColor(restored, cv2.COLOR_BGR2RGB))
+    axs[2].set_title('DeepPCA Restored')
+
+    # remove the x and y ticks
+    for ax in axs:
+        ax.set_xticks([])
+        ax.set_yticks([])

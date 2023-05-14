@@ -13,7 +13,7 @@ import os
 import cv2
 import shutil
 import random
-from utils import PSNR, compare_images
+from utils import PSNR, compare_images, Display_images_as_subplots
 
 from DPCA import run_single_img, run_cifar, run_faces, CPCA
 from model import DPCA_eig, STEM
@@ -152,13 +152,14 @@ class Eigenfaces(object):                                                       
                 path_to_img_restore = os.path.join(restored_dir,
                         's' + str(face_id), str(test_id) + '.pgm') 
                 scores_ori_comp = compare_images(path_to_img_original, path_to_img_compressed)
-                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_ori_comp[0]}, MSE: {scores_ori_comp[1]}, SSIM: {scores_ori_comp[2]}\n")
+                f.write(f"Image: {face_id}_{test_id} scores_ori_comp\nPSNR: {scores_ori_comp[0]}, MSE: {scores_ori_comp[1]}, SSIM: {scores_ori_comp[2]}\n")
                 scores_ori_rest = compare_images(path_to_img_original, path_to_img_restore)
-                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_ori_rest[0]}, MSE: {scores_ori_rest[1]}, SSIM: {scores_ori_rest[2]}\n")
+                f.write(f"Image: {face_id}_{test_id} scores_ori_rest\nPSNR: {scores_ori_rest[0]}, MSE: {scores_ori_rest[1]}, SSIM: {scores_ori_rest[2]}\n")
                 scores_rest_comp = compare_images(path_to_img_restore, path_to_img_compressed)
-                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_rest_comp[0]}, MSE: {scores_rest_comp[1]}, SSIM: {scores_rest_comp[2]}\n")
-                scores_rest_ori = compare_images(path_to_img_restore, path_to_img_original)
-                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_rest_ori[0]}, MSE: {scores_rest_ori[1]}, SSIM: {scores_rest_ori[2]}\n")
+                f.write(f"Image: {face_id}_{test_id} scores_rest_comp\nPSNR: {scores_rest_comp[0]}, MSE: {scores_rest_comp[1]}, SSIM: {scores_rest_comp[2]}\n")
+                Display_images_as_subplots(path_to_img_original,path_to_img_compressed,path_to_img_restore)
+                # scores_rest_ori = compare_images(path_to_img_restore, path_to_img_original)
+                # f.write(f"Image: {face_id}_{test_id} scores_rest_ori\nPSNR: {scores_rest_ori[0]}, MSE: {scores_rest_ori[1]}, SSIM: {scores_rest_ori[2]}\n")
         f.close()                                                               # closing the file
 
     def compute_psnr(self):
@@ -185,10 +186,10 @@ class Eigenfaces(object):                                                       
                 psnr_ori_comp = PSNR(path_to_img_original,path_to_img_compressed)
                 psnr_ori_rest = PSNR(path_to_img_original,path_to_img_restore)
                 psnr_rest_comp = PSNR(path_to_img_restore,path_to_img_compressed)
-                psnr_rest_ori = PSNR(path_to_img_restore,path_to_img_original)
+                # psnr_rest_ori = PSNR(path_to_img_restore,path_to_img_original)
                 # write the result to a csv file
-                f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\npsnr_rest_ori: {psnr_rest_ori}\n\n")
-                # f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\n\n")
+                # f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\npsnr_rest_ori: {psnr_rest_ori}\n\n")
+                f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\n\n")
                 # f.write('image: %s\npsnr_ori_comp: %.2f\npsnr_ori_rest: %.2f\npsnr_rest_comp: %.2f\n\n' %
                                 # ("Image: "+str(face_id)+"_"+str(test_id), psnr_ori_comp, psnr_ori_rest, psnr_rest_comp))
                 # f.write('image: %s\nresult: correct\n\n' % path_to_img)
