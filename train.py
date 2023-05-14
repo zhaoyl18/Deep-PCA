@@ -13,7 +13,7 @@ import os
 import cv2
 import shutil
 import random
-from utils import PSNR
+from utils import PSNR, compare_images
 
 from DPCA import run_single_img, run_cifar, run_faces, CPCA
 from model import DPCA_eig, STEM
@@ -129,6 +129,37 @@ class Eigenfaces(object):                                                       
 
         closest_face_id = np.argmin(norms)                                      # the id [0..240) of the minerror face to the sample
         return int(closest_face_id / self.train_faces_count) + 1                   # return the faceid (1..40)
+    def all_metrics(self):
+        # scores = compare_images(target, ref)
+        print('> Evaluating metrics: PSNR, MSE, SSIM started')
+        original_dir = os.path.join('datasets', 'att_faces')
+        compressed_dir = os.path.join('datasets', 'att_faces_compress')
+        if not os.path.exists(compressed_dir):   
+            assert("commpresed_dis does not exist")  #assert a message "no path error"  
+        restored_dir = os.path.join('datasets', 'att_faces_restore')
+        if not os.path.exists(restored_dir):                                           # create a folder where to store the results
+            assert("restored_dir does not exist")  #assert a message "no path error"")                                 
+        results_file = os.path.join('results', 'three_metrics_results.txt')
+        f = open(results_file, 'w')                                       # the actual file
+
+        for face_id in range(1, self.faces_count + 1):
+            for test_id in range(1, 11):
+                # if (test_id in self.training_ids[face_id-1]) == False:          # we skip the image if it is part of the training set
+                path_to_img_original = os.path.join(original_dir,
+                        's' + str(face_id), str(test_id) + '.pgm')   
+                path_to_img_compressed = os.path.join(compressed_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                path_to_img_restore = os.path.join(restored_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                scores_ori_comp = compare_images(path_to_img_original, path_to_img_compressed)
+                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_ori_comp[0]}, MSE: {scores_ori_comp[1]}, SSIM: {scores_ori_comp[2]}\n")
+                scores_ori_rest = compare_images(path_to_img_original, path_to_img_restore)
+                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_ori_rest[0]}, MSE: {scores_ori_rest[1]}, SSIM: {scores_ori_rest[2]}\n")
+                scores_rest_comp = compare_images(path_to_img_restore, path_to_img_compressed)
+                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_rest_comp[0]}, MSE: {scores_rest_comp[1]}, SSIM: {scores_rest_comp[2]}\n")
+                scores_rest_ori = compare_images(path_to_img_restore, path_to_img_original)
+                f.write(f"Image: {face_id}_{test_id}\nPSNR: {scores_rest_ori[0]}, MSE: {scores_rest_ori[1]}, SSIM: {scores_rest_ori[2]}\n")
+        f.close()                                                               # closing the file
 
     def compute_psnr(self):
         print('> Evaluating PSNR (signal-to-noise ratio) started')
@@ -154,8 +185,10 @@ class Eigenfaces(object):                                                       
                 psnr_ori_comp = PSNR(path_to_img_original,path_to_img_compressed)
                 psnr_ori_rest = PSNR(path_to_img_original,path_to_img_restore)
                 psnr_rest_comp = PSNR(path_to_img_restore,path_to_img_compressed)
+                psnr_rest_ori = PSNR(path_to_img_restore,path_to_img_original)
                 # write the result to a csv file
-                f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\n\n")
+                f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\npsnr_rest_ori: {psnr_rest_ori}\n\n")
+                # f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\n\n")
                 # f.write('image: %s\npsnr_ori_comp: %.2f\npsnr_ori_rest: %.2f\npsnr_rest_comp: %.2f\n\n' %
                                 # ("Image: "+str(face_id)+"_"+str(test_id), psnr_ori_comp, psnr_ori_rest, psnr_rest_comp))
                 # f.write('image: %s\nresult: correct\n\n' % path_to_img)
@@ -221,3 +254,4 @@ if __name__ == "__main__":
         faces.evaluate()
         # evaluate with psnr
         faces.compute_psnr()
+        faces.all_metrics()
