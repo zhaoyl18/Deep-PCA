@@ -175,8 +175,8 @@ if __name__ == "__main__":
         run_single_img(args)
     elif args.dataset == 'faces':
         # aaa = Eigenfaces('./datasets/att_faces_restore')
-        # if not os.path.exists('results'):                                           # create a folder where to store the results
-        #     os.makedirs('results')
+        if not os.path.exists('results'):                                           # create a folder where to store the results
+            os.makedirs('results')
         # aaa.evaluate()
         
         faces = Eigenfaces('./datasets/att_faces_restore')

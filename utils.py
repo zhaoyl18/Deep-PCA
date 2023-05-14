@@ -25,3 +25,17 @@ def view_image(tensor):  # input: (C, H, W)
 	npimg = img.numpy()   # convert from tensor
 	plt.imshow(np.transpose(npimg, (1, 2, 0))) 
 	plt.show()
+    
+'''
+PSNR is most commonly used to estimate the efficiency of compressors, filters, etc.
+The larger the value of PSNR, 
+the more efficient is a corresponding compression or filter method.
+'''    
+def PSNR(original, compressed):
+    mse = np.mean((original - compressed) ** 2)
+    if(mse == 0):  # MSE is zero means no noise is present in the signal .
+                  # Therefore PSNR have no importance.
+        return 100
+    max_pixel = 255.0
+    psnr = 20 * log10(max_pixel / sqrt(mse))
+    return psnr
