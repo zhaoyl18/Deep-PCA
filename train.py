@@ -13,6 +13,7 @@ import os
 import cv2
 import shutil
 import random
+from utils import PSNR
 
 from DPCA import run_single_img, run_cifar, run_faces, CPCA
 from model import DPCA_eig, STEM
@@ -107,7 +108,8 @@ class Eigenfaces(object):                                                       
         norms = np.linalg.norm(self.evectors, axis=0)                           # find the norm of each eigenvector
         self.evectors = self.evectors / norms                                   # normalize all eigenvectors
 
-        self.W = self.evectors.transpose() * L       #(62,320)
+        self.W = self.evectors.transpose() * L       #(62,320) 
+        print(">> W shape: ", self.W.shape) # (101,240)
 
         print('> Initializing ended')
     """
@@ -128,6 +130,40 @@ class Eigenfaces(object):                                                       
         closest_face_id = np.argmin(norms)                                      # the id [0..240) of the minerror face to the sample
         return int(closest_face_id / self.train_faces_count) + 1                   # return the faceid (1..40)
 
+    def compute_psnr(self):
+        print('> Evaluating PSNR (signal-to-noise ratio) started')
+        original_dir = os.path.join('datasets', 'att_faces')
+        compressed_dir = os.path.join('datasets', 'att_faces_compress')
+        if not os.path.exists(compressed_dir):   
+            assert("commpresed_dis does not exist")  #assert a message "no path error"  
+        restored_dir = os.path.join('datasets', 'att_faces_restore')
+        if not os.path.exists(restored_dir):                                           # create a folder where to store the results
+            assert("restored_dir does not exist")  #assert a message "no path error"")                                 
+        results_file = os.path.join('results', 'psnr_results.txt')
+        f = open(results_file, 'w')                                       # the actual file
+
+        for face_id in range(1, self.faces_count + 1):
+            for test_id in range(1, 11):
+                # if (test_id in self.training_ids[face_id-1]) == False:          # we skip the image if it is part of the training set
+                path_to_img_original = os.path.join(original_dir,
+                        's' + str(face_id), str(test_id) + '.pgm')   
+                path_to_img_compressed = os.path.join(compressed_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                path_to_img_restore = os.path.join(restored_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                psnr_ori_comp = PSNR(path_to_img_original,path_to_img_compressed)
+                psnr_ori_rest = PSNR(path_to_img_original,path_to_img_restore)
+                psnr_rest_comp = PSNR(path_to_img_restore,path_to_img_compressed)
+                # write the result to a csv file
+                f.write(f"Image: {face_id}_{test_id}\npsnr_ori_comp: {psnr_ori_comp}\npsnr_ori_rest: {psnr_ori_rest}\npsnr_rest_comp: {psnr_rest_comp}\n\n")
+                # f.write('image: %s\npsnr_ori_comp: %.2f\npsnr_ori_rest: %.2f\npsnr_rest_comp: %.2f\n\n' %
+                                # ("Image: "+str(face_id)+"_"+str(test_id), psnr_ori_comp, psnr_ori_rest, psnr_rest_comp))
+                # f.write('image: %s\nresult: correct\n\n' % path_to_img)
+
+        print('> Evaluating AT&T faces ended')
+        f.close()                                                               # closing the file
+
+                
     """
     Evaluate the model using the 4 test faces left
     from every different face in the AT&T set.
@@ -139,6 +175,7 @@ class Eigenfaces(object):                                                       
 
         test_count = self.test_faces_count * self.faces_count                   # number of all AT&T test images/faces
         test_correct = 0
+        print("faces_count: ", self.faces_count)
         for face_id in range(1, self.faces_count + 1):
             for test_id in range(1, 11):
                 if (test_id in self.training_ids[face_id-1]) == False:          # we skip the image if it is part of the training set
@@ -146,6 +183,7 @@ class Eigenfaces(object):                                                       
                             's' + str(face_id), str(test_id) + '.pgm')          # relative path
 
                     result_id = self.classify(path_to_img)
+                    # print("result_id: ", result_id, "face_id: ", face_id, "test_id: ", test_id)
                     result = (result_id == face_id)
 
                     if result == True:
@@ -181,3 +219,5 @@ if __name__ == "__main__":
         
         faces = Eigenfaces('./datasets/att_faces_restore')
         faces.evaluate()
+        # evaluate with psnr
+        faces.compute_psnr()
