@@ -157,7 +157,7 @@ class Eigenfaces(object):                                                       
                 f.write(f"Image: {face_id}_{test_id} scores_ori_rest\nPSNR: {scores_ori_rest[0]}, MSE: {scores_ori_rest[1]}, SSIM: {scores_ori_rest[2]}\n")
                 scores_rest_comp = compare_images(path_to_img_restore, path_to_img_compressed)
                 f.write(f"Image: {face_id}_{test_id} scores_rest_comp\nPSNR: {scores_rest_comp[0]}, MSE: {scores_rest_comp[1]}, SSIM: {scores_rest_comp[2]}\n")
-                Display_images_as_subplots(path_to_img_original,path_to_img_compressed,path_to_img_restore)
+                # Display_images_as_subplots(path_to_img_original,path_to_img_compressed,path_to_img_restore)
                 # scores_rest_ori = compare_images(path_to_img_restore, path_to_img_original)
                 # f.write(f"Image: {face_id}_{test_id} scores_rest_ori\nPSNR: {scores_rest_ori[0]}, MSE: {scores_rest_ori[1]}, SSIM: {scores_rest_ori[2]}\n")
         f.close()                                                               # closing the file
