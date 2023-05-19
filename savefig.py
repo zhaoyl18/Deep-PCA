@@ -66,10 +66,14 @@ def restore_faces():													# *** COMMENTS ***
 			img = cv2.imread(path_to_img, 0)                                # read a grayscale image
 			# img_restore = run_faces(img)
 			
+			# path_to_restored = os.path.join(restore_dir,
+			# 		's' + str(face_id), str(training_id) + '.pgm')
 			path_to_restored = os.path.join(restore_dir,
-					's' + str(face_id), str(training_id) + '.pgm')
+					's' + str(face_id), str(training_id) + '.jpg')
 			restore_via_LSE(path_to_img,path_to_restored)
+			# os.remove(path_to_restored)
 			print('> wrting file: ' + path_to_restored)
+
 			# cv2.imwrite(path_to_restored, img_restore)
 
 def compress_faces():													# *** COMMENTS ***
