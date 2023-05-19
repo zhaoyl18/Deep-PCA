@@ -1,9 +1,0 @@
-*.pyc
-__pycache__
-cifar2png.egg-info/
-dist/
-results/
-.vscode
-data_cifar10/
-component analysis.py
-*.ini
