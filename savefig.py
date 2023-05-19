@@ -7,7 +7,7 @@ import cv2
 import shutil
 import random
 from utils import plot, view_image, plot_one_image, show_three_dataset
-from DPCA import run_single_img, run_cifar, run_faces
+from DPCA import run_single_img, run_cifar, run_faces, restore_via_LSE
 
 # matplotlib.rcParams["figure.dpi"] = 1200
 
@@ -64,11 +64,13 @@ def restore_faces():													# *** COMMENTS ***
 					's' + str(face_id), str(training_id) + '.pgm')          # relative path
 			print('> reading file: ' + path_to_img)
 			img = cv2.imread(path_to_img, 0)                                # read a grayscale image
-			img_restore = run_faces(img)
+			# img_restore = run_faces(img)
+			
 			path_to_restored = os.path.join(restore_dir,
 					's' + str(face_id), str(training_id) + '.pgm')
+			restore_via_LSE(path_to_img,path_to_restored)
 			print('> wrting file: ' + path_to_restored)
-			cv2.imwrite(path_to_restored, img_restore)
+			# cv2.imwrite(path_to_restored, img_restore)
 
 def compress_faces():													# *** COMMENTS ***
 	faces_count = 40                                                          # directory path to the AT&T faces                                                                 # length of the column vector
@@ -126,17 +128,20 @@ def prepare_images(path, factor, path_output):
 	# resize the image - down
 	img = cv2.resize(img, (new_width, new_height), interpolation = cv2.INTER_CUBIC)
 	
-	# resize the image - up
-	img = cv2.resize(img, (w, h), interpolation = cv2.INTER_CUBIC)
+	# # resize the image - up
+	# img = cv2.resize(img, (w, h), interpolation = cv2.INTER_CUBIC)
 	
 	# save the image
 	# print('Saving {}'.format(file))
 	cv2.imwrite(path_output, img)
+	print("After: ",img.shape) #(112, 92)
 	# plot_one_image(img)
 if __name__ == '__main__':
 	# dataset = datasets.CIFAR10('./data_cifar10', train=True, download=True)
 	# save_cifar()
 
-	# restore_faces()
 	# compress_faces()
+	# restore_faces()
 	show_three_dataset()
+
+

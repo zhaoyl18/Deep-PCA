@@ -62,6 +62,7 @@ def CRCA(data, targets, num_components, channel=3):
 
 def CPCA(data, targets, num_components, channel=3):
     stem = STEM(data, channel=channel)  #(BHW,27)
+    # Y(target): (3,BHW), X(X_stem): (27, BHW)
     PCA_output = DPCA_eig(targets, stem.t(), m=num_components) # m is number of components
     # components = PCA_output['components']
     weights = PCA_output['W']
