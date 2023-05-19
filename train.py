@@ -29,7 +29,8 @@ class Eigenfaces(object):                                                       
     l = train_faces_count * faces_count                                         # training images count
     m = 92                                                                      # number of columns of the image
     n = 112                                                                     # number of rows of the image
-    mn = m * n                                                                  # length of the column vector
+    mn = m * n  
+                                                                    # length of the column vector
 
     """
     Initializing the Eigenfaces model.
@@ -38,10 +39,12 @@ class Eigenfaces(object):                                                       
         print('> Initializing started')
 
         self.faces_dir = _faces_dir
+        print("self.faces_dir: ", self.faces_dir)
         self.energy = 0.85
-        self.training_ids = []                                                  # train image id's for every at&t face
+        self.training_ids = []  
+                                                        # train image id's for every at&t face
 
-        L = np.empty(shape=(self.mn, self.l), dtype='float64')                  # each row of L represents one train image
+        # self.L = np.empty(shape=(self.mn, self.l), dtype='float64')                  # each row of L represents one train image
 
         cur_img = 0
         for face_id in range(1, self.faces_count + 1):
@@ -54,18 +57,29 @@ class Eigenfaces(object):                                                       
                         's' + str(face_id), str(training_id) + '.pgm')          # relative path
                 #print '> reading file: ' + path_to_img
 
-                img = cv2.imread(path_to_img, 0)                                # read a grayscale image
-                img_col = np.array(img, dtype='float64').flatten()              # flatten the 2d image into 1d
+                img = cv2.imread(path_to_img, 0)  
+                h, w = img.shape                              # read a grayscale image 112 X 92, or 62 X 47
+                print("h and w: ", h, w) # (112, 92)
+                self.m = w
+                self.n = h
+                self.mn = self.m * self.n  
+                self.L = np.empty(shape=(self.mn, self.l), dtype='float64')  
+                print("self.L shape: ", self.L.shape) # (10304, 320)")
 
-                L[:, cur_img] = img_col[:]                                      # set the cur_img-th column to the current training image
+                img_col = np.array(img, dtype='float64').flatten()              # flatten the 2d image into 1d
+                print("img_col shape: ", img_col.shape) # (10304,)
+
+                self.L[:, cur_img] = img_col[:]                                      # set the cur_img-th column to the current training image
+                print("self.L shape: ", self.L.shape) # (10304, 320)")
                 cur_img += 1
 
-        self.mean_img_col = np.sum(L, axis=1) / self.l                          # get the mean of all images / over the rows of L
+        self.mean_img_col = np.sum(self.L, axis=1) / self.l                          # get the mean of all images / over the rows of L
+        print("mean_img_col shape: ", self.mean_img_col.shape) # (10304,)
 
         for j in range(0, self.l):                                             # subtract from all training images
-            L[:, j] -= self.mean_img_col[:]
+            self.L[:, j] -= self.mean_img_col[:]
 
-        C = np.matrix(L.transpose()) * np.matrix(L)                             # instead of computing the covariance matrix as
+        C = np.matrix(self.L.transpose()) * np.matrix(self.L)                             # instead of computing the covariance matrix as
         C /= self.l                                                             # L*L^T, we set C = L^T*L, and end up with way
                                                                                 # smaller and computentionally inexpensive one
                                                                                 # we also need to divide by the number of training
@@ -104,11 +118,11 @@ class Eigenfaces(object):                                                       
         self.evalues = self.evalues[0:evalues_count]                            # reduce the number of eigenvectors/values to consider
         self.evectors = self.evectors[:,0:evalues_count]
 
-        self.evectors = L * self.evectors    #(HW,62)
+        self.evectors = self.L * self.evectors    #(HW,62)
         norms = np.linalg.norm(self.evectors, axis=0)                           # find the norm of each eigenvector
         self.evectors = self.evectors / norms                                   # normalize all eigenvectors
 
-        self.W = self.evectors.transpose() * L       #(62,320) 
+        self.W = self.evectors.transpose() * self.L       #(62,320) 
         print(">> W shape: ", self.W.shape) # (101,240)
 
         print('> Initializing ended')
@@ -118,7 +132,14 @@ class Eigenfaces(object):                                                       
     def classify(self, path_to_img):
         img = cv2.imread(path_to_img, 0)                                        # read as a grayscale image
         img_col = np.array(img, dtype='float64').flatten()                      # flatten the image
-        img_col -= self.mean_img_col                                            # subract the mean column
+        img_col -= self.mean_img_col 
+        
+                                                   # subract the mean column
+        h, w = img.shape                              # read a grayscale image 112 X 92, or 62 X 47
+        self.m = w
+        self.n = h
+        self.mn = self.m * self.n  
+
         img_col = np.reshape(img_col, (self.mn, 1))                             # from row vector to col vector
 
         S = self.evectors.transpose() * img_col                                 # projecting the normalized probe onto the
@@ -250,8 +271,10 @@ if __name__ == "__main__":
         if not os.path.exists('results'):                                           # create a folder where to store the results
             os.makedirs('results')
         # aaa.evaluate()
-        
-        faces = Eigenfaces('./datasets/att_faces_restore')
+        compressed_dir = os.path.join('datasets', 'att_faces_compress')
+        # faces = Eigenfaces('./datasets/att_faces')
+        faces = Eigenfaces('./datasets/att_faces_compress')
+        # faces = Eigenfaces('./datasets/att_faces_restore')
         faces.evaluate()
         # evaluate with psnr
         faces.compute_psnr()
