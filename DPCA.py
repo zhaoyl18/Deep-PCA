@@ -15,7 +15,7 @@ from model import CRCA, STEM, generate_featuremaps, CPCA
 from utils import plot, view_image, plot_one_image
 # from utils import plot, plot_faces, plot_faces_2
 # from data import load_data, load_faces
-
+import os
 def run_cifar(args):
     # load cifar-10 dataset
     kwargs = {}
@@ -135,7 +135,29 @@ def restore_via_LSE(path_to_img, path_to_restore):
     restored_img = torch.clamp(featuremaps[0].squeeze(0), min=-1.0, max=1.0)
     restored_img = restored_img / 2 + 0.5
     print("restored img shape:",restored_img.shape)
-    cv2.imwrite(path_to_restore, img) #save img to path_output
+    restored_img = restored_img.cpu().data.numpy()
+    # print(restored_img)
+    # plot_one_image(restored_img)
+    plt.imshow(cv2.cvtColor(restored_img, cv2.COLOR_BGR2RGB))
+    plt.imsave(path_to_restore,restored_img) 
+    # plt.show()
+    # plt.imsave(path_to_restore, restored_img)
+    # cv2.imwrite(path_to_restore, restored_img) #save img to path_output
+    
+    test_img = cv2.imread(path_to_restore,0) #orginal 112 X 92
+    # plot_one_image(test_img)
+
+    print("new path: ",path_to_restore[:-3]+"pgm")
+    cv2.imwrite(path_to_restore[:-3]+"pgm", test_img)
+
+    # im = Image.open(path_to_restore)
+    # im = im.convert('RGB')
+    # im.save(path_to_restore[:-3]+"pgm")
+    
+
+    test_img = cv2.imread(path_to_restore[:-3]+"pgm") #orginal 112 X 92
+    # plot_one_image(test_img)
+
     # return restored_img.cpu().data.numpy()
     
 def run_faces(img):
