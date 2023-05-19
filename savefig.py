@@ -89,8 +89,8 @@ def compress_faces():													# *** COMMENTS ***
 	cur_img = 0
 	i = 0
 	for face_id in range(1, faces_count + 1):
-		if i>1: #for test
-			break
+		# if i>1: #for test
+		# 	break
 		print(face_id)
 		training_ids = range(1, 11)
 		if not os.path.exists(os.path.join(compress_dir,
@@ -144,8 +144,8 @@ if __name__ == '__main__':
 	# dataset = datasets.CIFAR10('./data_cifar10', train=True, download=True)
 	# save_cifar()
 
-	# compress_faces()
+	compress_faces()
 	# restore_faces()
-	show_three_dataset()
+	# show_three_dataset()
 
 
