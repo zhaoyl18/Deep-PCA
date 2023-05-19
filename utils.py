@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 from skimage.metrics import structural_similarity as ssim
-
+import os
 
 def plot(data):
     fig, axs = plt.subplots(3, 3)
@@ -98,3 +98,25 @@ def Display_images_as_subplots(original,compressed,restored):
     for ax in axs:
         ax.set_xticks([])
         ax.set_yticks([])
+    plt.show()
+
+def plot_one_image(img):
+    # plt.imshow('image window', img)
+    # plt.imshow(img.cpu().data.numpy())
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.show()
+def show_three_dataset():
+    # plt.rcParams.update({'figure.max_open_warning': 0})
+    original_dir = os.path.join('datasets', 'att_faces')
+    compressed_dir = os.path.join('datasets', 'att_faces_compress')
+    restored_dir = os.path.join('datasets', 'att_faces_restore')
+    for face_id in range(1, 40 + 1):
+            for test_id in range(1, 11):
+                # if (test_id in self.training_ids[face_id-1]) == False:          # we skip the image if it is part of the training set
+                path_to_img_original = os.path.join(original_dir,
+                        's' + str(face_id), str(test_id) + '.pgm')   
+                path_to_img_compressed = os.path.join(compressed_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                path_to_img_restore = os.path.join(restored_dir,
+                        's' + str(face_id), str(test_id) + '.pgm') 
+                Display_images_as_subplots(path_to_img_original,path_to_img_compressed,path_to_img_restore)
