@@ -13,10 +13,18 @@ import os
 import cv2
 import shutil
 import random
-from utils import PSNR, compare_images, Display_images_as_subplots
+from utils import PSNR, compare_images, Display_images_as_subplots, plot_one_image
 
 from DPCA import run_single_img, run_cifar, run_faces, CPCA
 from model import DPCA_eig, STEM
+
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+
 
 class Eigenfaces(object):                                                       # *** COMMENTS ***
     faces_count = 40
@@ -42,10 +50,10 @@ class Eigenfaces(object):                                                       
         print("self.faces_dir: ", self.faces_dir)
         self.energy = 0.85
         self.training_ids = []  
-                                                        # train image id's for every at&t face
-
+        # train image id's for every at&t face
         # self.L = np.empty(shape=(self.mn, self.l), dtype='float64')                  # each row of L represents one train image
-
+        print('> Initializing ended')
+    def ini_pca(self):
         cur_img = 0
         for face_id in range(1, self.faces_count + 1):
 
@@ -124,11 +132,126 @@ class Eigenfaces(object):                                                       
 
         self.W = self.evectors.transpose() * self.L       #(62,320) 
         print(">> W shape: ", self.W.shape) # (101,240)
+    def dataLoader(self):
+        print('> Loading Data')
+        print("self.faces_dir: ", self.faces_dir)
+        self.energy = 0.85
+        self.training_ids = []  
+        cur_img = 0
+        X = []
+        y = []
+        for face_id in range(1, self.faces_count + 1):
+            # training_ids = random.sample(range(1, 11), self.train_faces_count)  # the id's of the 6 random training images
+            # self.training_ids.append(training_ids)                              # remembering the training id's for later
+            for training_id in range(1, 11):
+                path_to_img = os.path.join(self.faces_dir,
+                        's' + str(face_id), str(training_id) + '.pgm')          # relative path
+                #print '> reading file: ' + path_to_img
+                img = cv2.imread(path_to_img, 0)
+                # plot_one_image(img)
+                img_array = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                X.append(img_array) #image
+                y.append(face_id) #label
+        print("length of X and y:")
+        print(len(X))
+        print(len(y))
+        X = np.array(X)
+        y = np.array(y)
+        # Reshape X to 2D array
+        print("X shape is:")
+        print(X.shape)
+        # pass
+        n_samples, height, width, channels = X.shape
+        X = X.reshape(n_samples, height * width * channels)
 
-        print('> Initializing ended')
+        # Standardize the features
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+        path_to_X_npy = os.path.join(self.faces_dir,'X.npy')          # relative path
+        path_to_y_npy = os.path.join(self.faces_dir,'Y.npy')          # relative path
+        np.save(path_to_X_npy, X_scaled)
+        np.save(path_to_y_npy, y)
+        print("Done: loading dataset and Saving npy files")
+        return X_scaled,y
+    def classify_tra_PCA(self):
+
+        X_train, y_train = self.dataLoader()
+        pca = PCA(n_components=2)
+        pca_result = pca.fit_transform(X_train)
+        print(pca.explained_variance_ratio_)
+        print(X_train.shape)
+        print(pca_result.shape) 
+
+        #plot - 1
+        # plt.scatter(pca_result[:4000, 0], pca_result[:4000, 1], c=y_train[:4000], edgecolor='none', alpha=0.5,
+        #    cmap=plt.get_cmap('jet', 10), s=5)
+        # plt.colorbar()
+        # plt.show()
+
+        #plot -2
+        # pca = PCA(200)
+        # pca_full = pca.fit(X_train)
+
+        # plt.plot(np.cumsum(pca_full.explained_variance_ratio_))
+        # plt.xlabel('# of components')
+        # plt.ylabel('Cumulative explained variance')
+        # plt.show()
+
+        #pca
+        pca = PCA(n_components=50)
+        X_train_transformed = pca.fit_transform(X_train)
+        # X_submission_transformed = pca.transform(X_submission)
+
+        X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_train_transformed, y_train, test_size=0.4, random_state=13)
+        
+        # components = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        components = [5, 10, 50, 100, 150, 200, 250,300, 350, 400]
+        neighbors = [1, 2, 3, 4, 5, 6, 7]
+        neighbors = [1, 15, 20, 25, 30, 35, 40]
+
+        scores = np.zeros( (components[len(components)-1]+1, neighbors[len(neighbors)-1]+1 ) )
+        results_file = os.path.join('results', f'{self.faces_dir[-6:]}_traditional_pca.txt')
+        f = open(results_file, 'w') 
+        for component in components:
+            for n in neighbors:
+                knn = KNeighborsClassifier(n_neighbors=n)
+                knn.fit(X_train_pca[:,:component], y_train_pca)
+                score = knn.score(X_test_pca[:,:component], y_test_pca)
+                #predict = knn.predict(X_test_pca[:,:component])
+                scores[component][n] = score
+                print('Components = ', component, ', neighbors = ', n,', Score = ', score)
+                f.write(f"Components = {component}, neighbors = {n}, Score = {score}\n")
+        f.close()
+        scores = np.reshape(scores[scores != 0], (len(components), len(neighbors)))
+
+        x = [0, 1, 2, 3, 4, 5, 6]
+        y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        plt.rcParams["axes.grid"] = False
+
+        fig, ax = plt.subplots()
+        plt.imshow(scores, cmap='hot', interpolation='none', vmin=.90, vmax=1)
+        plt.xlabel('neighbors')
+        plt.ylabel('components')
+        plt.xticks(x, neighbors)
+        plt.yticks(y, components)
+        plt.title('KNN score heatmap')
+
+        plt.colorbar()
+        plt.show()   
+
     """
     Classify an image to one of the eigenfaces.
     """
+    def get_U():
+        pass
+    def get_F():
+        pass
+    def get_W():
+        pass
+    def classify_rca_dpca(self, path_to_img):
+        pass
     def classify(self, path_to_img):
         img = cv2.imread(path_to_img, 0)                                        # read as a grayscale image
         img_col = np.array(img, dtype='float64').flatten()                      # flatten the image
@@ -257,7 +380,7 @@ class Eigenfaces(object):                                                       
 if __name__ == "__main__":
     random.seed(0)
     parser = argparse.ArgumentParser(description="PyTorch Training")
-    parser.add_argument('--model', type=str, default='PCA', help='choose between PCA and RCA')
+    parser.add_argument('--model', type=str, default='RCA-DPCA', help='choose between PCA and RCA, and tra_PCA')
     parser.add_argument('--num_components', type=int, default=2, help='choose between 1,2,3')
     parser.add_argument('--dataset', type=str, default='faces', help='choose between single_img, cifar and faces')
     args = parser.parse_args()
@@ -267,15 +390,22 @@ if __name__ == "__main__":
     elif args.dataset == 'single_img':
         run_single_img(args)
     elif args.dataset == 'faces':
-        # aaa = Eigenfaces('./datasets/att_faces_restore')
-        if not os.path.exists('results'):                                           # create a folder where to store the results
-            os.makedirs('results')
-        # aaa.evaluate()
-        compressed_dir = os.path.join('datasets', 'att_faces_compress')
-        # faces = Eigenfaces('./datasets/att_faces')
-        faces = Eigenfaces('./datasets/att_faces_compress')
-        # faces = Eigenfaces('./datasets/att_faces_restore')
-        faces.evaluate()
-        # evaluate with psnr
-        faces.compute_psnr()
-        faces.all_metrics()
+        if args.model == 'tra_PCA':
+            # faces = Eigenfaces('./datasets/att_faces')
+            # faces = Eigenfaces('./datasets/att_faces_compress')
+            faces = Eigenfaces('./datasets/att_faces_restore')
+            faces.classify_tra_PCA()
+        elif args.model == 'RCA-DPCA':
+            # aaa = Eigenfaces('./datasets/att_faces_restore')
+            if not os.path.exists('results'):                                           # create a folder where to store the results
+                os.makedirs('results')
+            # aaa.evaluate()
+            compressed_dir = os.path.join('datasets', 'att_faces_compress')
+            # faces = Eigenfaces('./datasets/att_faces')
+            # faces = Eigenfaces('./datasets/att_faces_compress')
+            faces = Eigenfaces('./datasets/att_faces_restore')
+            faces.ini_pca()
+            faces.evaluate()
+            # evaluate with psnr
+            faces.compute_psnr()
+            faces.all_metrics()
