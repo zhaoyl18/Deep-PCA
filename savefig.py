@@ -145,7 +145,7 @@ if __name__ == '__main__':
 	# save_cifar()
 
 	compress_faces()
-	# restore_faces()
-	# show_three_dataset()
+	restore_faces()
+	show_three_dataset()
 
 
