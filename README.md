@@ -1,13 +1,5 @@
 # Deep PCA for Eigenfaces
 
-## TODO
-
-1. add a function that computes PSNR to test if the recovered images are good, or at least better than compressed images.
-2. Is is possible to adopt deep PCA in RECOGNITION process, not just compressing images?
-As for now, I tried using deep PCA when making eigenfaces, but there are some concerns and technical issues. Like it is not feasible to do matrix inverse for a matrix $X X^\top$ with size $(9\times H \times W, 9\times H \times W)$ where H = 112, W =92.
-
-3. Do more experiments for random seeds, different train/test ratios and make illustrative tables and plots.
-4. Write report and slides.
 
 ## Abstract
 
