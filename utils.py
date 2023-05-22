@@ -120,3 +120,30 @@ def show_three_dataset():
                 path_to_img_restore = os.path.join(restored_dir,
                         's' + str(face_id), str(test_id) + '.pgm') 
                 Display_images_as_subplots(path_to_img_original,path_to_img_compressed,path_to_img_restore)
+def PSNR(original_path, compressed_path):
+    original = cv2.imread(original_path)
+    compressed = cv2.imread(compressed_path, 1)
+    mse = np.mean((original - compressed) ** 2)
+    if(mse == 0):  # MSE is zero means no noise is present in the signal .
+                  # Therefore PSNR have no importance.
+        return 100
+    max_pixel = 255.0
+    psnr = 20 * log10(max_pixel / sqrt(mse))
+    return psnr
+def mse(original_path, compressed_path):
+    # the MSE between the two images is the sum of the squared difference between the two images
+    original = cv2.imread(original_path)
+    compressed = cv2.imread(compressed_path, 1)
+    mse = np.mean((original - compressed) ** 2)
+    return mse
+# define function that combines all three image quality metrics
+def compare_images(original_path, compressed_path):
+    scores = []
+    scores.append(PSNR(original_path, compressed_path))
+    scores.append(mse(original_path, compressed_path))
+
+    original = cv2.imread(original_path)
+    compressed = cv2.imread(compressed_path, 1)
+    scores.append(ssim(compressed, original, multichannel =True)) # target, ref (original)
+    
+    return scores
