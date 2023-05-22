@@ -43,8 +43,8 @@ To recognize an unknown face, we used the Knn algorithm to find the close subjec
 ## Results
 
 * Using original images, probability of correctness is: 96.25\%
-* Using 4 times compressed images, probability of correctness is: 88.75\%
-* Using images compressed then recovered by deep PCA, probability of correctness is: 89.375\%
+* Using 4 times compressed images, probability of correctness is: 95.0\%
+* Using images compressed then recovered by deep PCA, probability of correctness is: 96.625\%
 
 ## Discussion
 
