@@ -1,6 +1,5 @@
 # Deep PCA for Eigenfaces
 
-
 ## Abstract
 
 This project focused on the methodology of Turk and Pentland's paper, ***Face recognition using eigenfaces*** [1]. We implemented the workflow suing basic algebra function of Numpy and PyTorch, including images preprocessing, eigenfaces construction, eigenspace representation of images, face recognition based on K-nn (K near neighbors) algorithm, performance evaluation. For performance evaluation, we worked AT&T face dataset (formerly 'The ORL Database of Faces').
@@ -44,8 +43,8 @@ To recognize an unknown face, we used the Knn algorithm to find the close subjec
 ## Results
 
 * Using original images, probability of correctness is: 96.25\%
-* Using 4 times compressed images, probability of correctness is: 88.75\%
-* Using images compressed then recovered by deep PCA, probability of correctness is: 89.375\%
+* Using 4 times compressed images, probability of correctness is: 95.0\%
+* Using images compressed then recovered by deep PCA, probability of correctness is: 96.625\%
 
 ## Discussion
 
